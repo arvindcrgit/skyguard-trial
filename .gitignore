@@ -1,0 +1,7 @@
+build/
+venv/
+__pycache__/
+*.so
+reports/
+.pytest_cache/
+compile_commands.json
