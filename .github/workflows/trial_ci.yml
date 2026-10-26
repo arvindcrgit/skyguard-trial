@@ -1,0 +1,46 @@
+name: SkyGuard SIL Trial Verification CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  sil-build-and-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake
+
+      - name: Build Embedded C Library
+        run: |
+          cmake -B build
+          cmake --build build
+
+      - name: Install Verification Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r verification/requirements.txt
+
+      - name: Run Automated Pytest SIL Scenarios
+        run: |
+          pytest verification/test_sil_scenarios.py --junitxml=reports/sil_test_results.xml --html=reports/trial_report.html --self-contained-html
+
+      - name: Upload Test Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trial-sil-verification-report
+          path: reports/
